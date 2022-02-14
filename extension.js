@@ -35,6 +35,7 @@ class Indicator extends PanelMenu.Button {
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
 		function find_add_menu (){
+			that.menu._getMenuItems().forEach((j)=>{if(j.url) j.destroy();});
 			const findstr = `
 #EXTINF:-1 ,追剧少女
 http://112.74.200.9:88/tv000000/m3u8.php?/migu/617432318
@@ -49,10 +50,10 @@ http://112.74.200.9:88/tv000000/m3u8.php?/migu/639528386
 				if(!str) return;
 				const [name, add] = str.split(',');
 				const item = new PopupMenu.PopupImageMenuItem("  "+name, stock_icon.icon_name);
-				item.add = add;
+				item.url = add;
 				item.connect('activate', (actor) => {
-					//~ lg(actor.add);
-					GLib.spawn_command_line_async('ffplay '+actor.add);
+					//~ lg(actor.url);
+					GLib.spawn_command_line_async('ffplay '+actor.url);
 				});
 				that.menu.addMenuItem(item);
 			});
