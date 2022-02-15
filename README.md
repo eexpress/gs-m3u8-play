@@ -5,3 +5,5 @@
 github有蛮多m3u8的仓库。
 
 依赖ffplay(ffmpeg)。必须安装。
+
+![](screenshot.png)
