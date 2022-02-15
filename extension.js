@@ -7,13 +7,59 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Me = ExtensionUtils.getCurrentExtension();
 function lg(s){log("==="+GETTEXT_DOMAIN+"===>"+s)};
+const ByteArray = imports.byteArray;
 
-let list = [];
+let list = [];	//name,url
+let favor = [];	//name,url
+let urllist = '';
 
 const Indicator = GObject.registerClass(
 class Indicator extends PanelMenu.Button {
 	_init() {
 		let that = this;
+		// read all m3u8 files.
+		const m3u8path = GLib.get_home_dir()+"/.local/share/m3u8-play/";
+		const favorfile = m3u8path+"favor.list";
+		if(GLib.file_test(favorfile, GLib.FileTest.IS_REGULAR)){
+			const [ok, content] = GLib.file_get_contents(favorfile);
+			if(ok){	favor = ByteArray.toString(content).split('\n'); }
+		}
+		const tempfile = "/tmp/m3u8.all";
+	try{
+		if(!GLib.file_test(tempfile, GLib.FileTest.IS_REGULAR)){
+			lg("cat ${m3u8path}/*.m3u* > ${tempfile}");
+			GLib.spawn_command_line_sync("cat ${m3u8path}/*.m3u* > ${tempfile}");
+		}
+		urllist = ByteArray.toString(GLib.file_get_contents(tempfile)[1]);
+	}catch(e){lg("Read URLs fail.");}
+		//~ lg("1:"+urllist);
+		if(!urllist){
+			urllist = `
+#EXTINF:-1 ,追剧少女
+http://112.74.200.9:88/tv000000/m3u8.php?/migu/617432318
+#EXTINF:-1 ,杨幂影院
+http://112.74.200.9:88/tv000000/m3u8.php?/migu/625542372
+#EXTINF:-1 ,刘亦菲影视展播
+http://112.74.200.9:88/tv000000/m3u8.php?/migu/639528386
+#EXTINF:-1 group-title="MIGU电影轮播" tvg-logo="https://s9.rr.itc.cn/r/wapChange/20171_22_18/a4a8u5974032374500.jpeg",MIGU刘亦菲影视展播
+http://117.148.179.134/PLTV/88888888/224/3221231787/index.m3u8
+#EXTINF:-1 ,黑莓電影
+http://183.207.249.14/PLTV/3/224/3221225567/index.m3u8
+#EXTINF:-1 ,CHC家庭電影
+http://39.134.18.65/dbiptv.sn.chinamobile.com/PLTV/88888888/224/3221226462/1.m3u8
+#EXTINF:-1 ,CHC動作電影
+http://39.134.18.66/dbiptv.sn.chinamobile.com/PLTV/88888888/224/3221226465/1.m3u8
+#EXTINF:-1 ,玄幻影院
+https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
+
+`;
+		}
+
+		//~ lg("2:"+urllist);
+		const re = /#EXTINF:.*?,(.+?)\r*\n((?:http|https|rtmp):\/\/.+?)\r*\n/mg;
+		list = urllist.replace(re, "$1,$2\n").split('\n');
+		lg("3:"+list);
+
 		super._init(0.0, _('M3U8 Play'));
 
 		const stock_icon = new St.Icon({ icon_name: 'folder-videos-symbolic', icon_size: 30 });
@@ -35,20 +81,13 @@ class Indicator extends PanelMenu.Button {
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
 		function find_add_menu (){
+			let s = input.text;
+			if(!s) return;
 			that.menu._getMenuItems().forEach((j)=>{if(j.url) j.destroy();});
-			const findstr = `
-#EXTINF:-1 ,追剧少女
-http://112.74.200.9:88/tv000000/m3u8.php?/migu/617432318
-#EXTINF:-1 ,杨幂影院
-http://112.74.200.9:88/tv000000/m3u8.php?/migu/625542372
-#EXTINF:-1 ,刘亦菲影视展播
-http://112.74.200.9:88/tv000000/m3u8.php?/migu/639528386
-`;
-			const re = /#EXTINF:.{1,3}?,(.*?)\n((?:http|https|rtmp):\/\/\d.*?)\n/mg;
-			list = findstr.replace(re, "$1,$2\n").split('\n');
 			list.forEach(function(str, index, array){
 				if(!str) return;
 				const [name, add] = str.split(',');
+				if(!name.includes(s)) return;
 				const item = new PopupMenu.PopupImageMenuItem("  "+name, stock_icon.icon_name);
 				item.url = add;
 				item.connect('activate', (actor) => {
