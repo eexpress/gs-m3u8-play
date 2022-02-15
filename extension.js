@@ -101,14 +101,12 @@ class Indicator extends PanelMenu.Button {
 			});
 			item._icon.connect('button-release-event', (actor) => {
 				if(item.favor){
-					lg("remove from favor.");
 					delete favor[favor.indexOf(name+","+url)];
 					save_favor();
 					that.menu.moveMenuItem(item, that.menu._getMenuItems().length - 1);
 					item.favor = false;
 					item.setIcon(icon_find0);
 				}else{
-					lg("add to favor.");
 					favor.push(name+","+url);
 					save_favor();
 					that.menu.moveMenuItem(item, 1);
