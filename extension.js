@@ -38,7 +38,8 @@ class Indicator extends PanelMenu.Button {
 
 		const re = /#EXTINF:.*?,(.+?)\r*\n((?:http|https|rtmp):\/\/.+?)\r*\n/mg;
 		list = urllist.replace(re, "$1,$2\n").split('\n');
-		lg("3:"+list);
+		//~ lg("list: "+list);
+		//~ lg("favor: "+favor);
 
 		super._init(0.0, _('M3U8 Play'));
 
@@ -72,16 +73,24 @@ class Indicator extends PanelMenu.Button {
 		}
 
 		function find_add_menu(){
+			let cnt = 20;
 			let s = input.text;
 			if(!s) return;
 			that.menu._getMenuItems().forEach((j)=>{if(!j.favor && j.url) j.destroy();});
-			list.forEach(function(str, index, array){
-				if(!str) return;
-				if(favor.indexOf(str)>=0) return;
-				const [name, url] = str.split(',');
-				if(!name.includes(s)) return;
-				add_menu(name, url, false);
-			});
+			try{
+				list.forEach(function(str, index, array){
+					if(!str) return;
+					if(favor.indexOf(str)>=0) return;
+					const [name, url] = str.split(',');
+					if(!name.includes(s)) return;
+					add_menu(name, url, false);
+					cnt--;
+					if(cnt<0){
+						Main.notify(_("搜索列表最多显示20个。爆了。"));
+						throw new Error("booom");
+					}
+				});
+			}catch(e){}
 		}
 
 		function add_menu(name, url, is_favor){
