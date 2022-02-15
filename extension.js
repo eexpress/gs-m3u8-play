@@ -95,15 +95,19 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 		}
 
 		function find_add_menu(){
-			that.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+			//~ that.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 			let s = input.text;
 			if(!s) return;
 			that.menu._getMenuItems().forEach((j)=>{if(!j.favor && j.url) j.destroy();});
 			list.forEach(function(str, index, array){
 				if(!str) return;
-				if(favor.indexOf(str)) return;
+				//~ lg("1"+str);
+				if(favor.indexOf(str)>=0) return;
+				//~ lg("2");
 				const [name, url] = str.split(',');
 				if(!name.includes(s)) return;
+				//~ lg("3");
+				//~ lg(str);
 				add_menu(name, url, false);
 			});
 		}
@@ -122,24 +126,30 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 
 			item.url = url;
 			item.favor = is_favor;
+			butt.favor = is_favor;
 			butt.connect('enter-event', (actor) => {
-				actor.child = is_favor ? icon_favor1 : icon_find1;
+				actor.child = actor.favor ? icon_favor1 : icon_find1;
 			});
 			butt.connect('leave-event', (actor) => {
-				actor.child = is_favor ? icon_favor0 : icon_find0;
+				actor.child = actor.favor ? icon_favor0 : icon_find0;
 			});
 			butt.connect('clicked', (actor) => {
-				if(is_favor){
+				if(actor.favor){
+					lg("remove from favor.");
 					delete favor[favor.indexOf(name+","+url)];
 					save_favor();
 					that.menu.moveMenuItem(item, that.menu._getMenuItems().length - 1);
 					item.favor = false;
+					actor.favor = false;
+					actor.child = icon_find0;
 				}else{
+					lg("add to favor.");
 					favor.push(name+","+url);
 					save_favor();
 					that.menu.moveMenuItem(item, 1);
 					item.favor = true;
-					item.hbox.butt.child = icon_favor0;
+					actor.favor = true;
+					actor.child = icon_favor0;
 				}
 			});
 			item.connect('activate', (actor) => {
