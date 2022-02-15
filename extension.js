@@ -1,4 +1,4 @@
-const GETTEXT_DOMAIN = 'm3u8-play';	//这行说指向翻译的 mo 文件名的关键
+const GETTEXT_DOMAIN = 'm3u8-play';
 const _ = imports.gettext.domain(GETTEXT_DOMAIN).gettext;
 const { GObject, GLib, Gio, Clutter, St } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -16,7 +16,7 @@ const Indicator = GObject.registerClass(
 class Indicator extends PanelMenu.Button {
 	_init() {
 		let that = this;
-		// read all m3u8 files.
+
 		const m3u8path = GLib.get_home_dir()+"/.local/share/m3u8-play/";
 		const favorfile = m3u8path+"favor.list";
 		if(GLib.file_test(favorfile, GLib.FileTest.IS_REGULAR)){
@@ -33,30 +33,12 @@ class Indicator extends PanelMenu.Button {
 		}catch(e){lg("Read URLs fail.");}
 
 		if(!urllist){
-			urllist = `
-#EXTINF:-1 ,追剧少女
-http://112.74.200.9:88/tv000000/m3u8.php?/migu/617432318
-#EXTINF:-1 ,杨幂影院
-http://112.74.200.9:88/tv000000/m3u8.php?/migu/625542372
-#EXTINF:-1 ,刘亦菲影视展播
-http://112.74.200.9:88/tv000000/m3u8.php?/migu/639528386
-#EXTINF:-1 group-title="MIGU电影轮播" tvg-logo="https://s9.rr.itc.cn/r/wapChange/20171_22_18/a4a8u5974032374500.jpeg",MIGU刘亦菲影视展播
-http://117.148.179.134/PLTV/88888888/224/3221231787/index.m3u8
-#EXTINF:-1 ,黑莓電影
-http://183.207.249.14/PLTV/3/224/3221225567/index.m3u8
-#EXTINF:-1 ,CHC家庭電影
-http://39.134.18.65/dbiptv.sn.chinamobile.com/PLTV/88888888/224/3221226462/1.m3u8
-#EXTINF:-1 ,CHC動作電影
-http://39.134.18.66/dbiptv.sn.chinamobile.com/PLTV/88888888/224/3221226465/1.m3u8
-#EXTINF:-1 ,玄幻影院
-https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
-`;
+			Main.notify(_("居然没有播放列表。"));
 		}
 
 		const re = /#EXTINF:.*?,(.+?)\r*\n((?:http|https|rtmp):\/\/.+?)\r*\n/mg;
 		list = urllist.replace(re, "$1,$2\n").split('\n');
 		lg("3:"+list);
-		//~ lg(`cat ${m3u8path}*.m3u* > ${tempfile}`);
 
 		super._init(0.0, _('M3U8 Play'));
 
@@ -80,11 +62,6 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 		this.menu.addMenuItem(item_input);
 		add_favor();
 
-		function refresh_menu(){
-			that.menu._getMenuItems().forEach((j)=>{if(!j === item_input) j.destroy();});
-			add_favor();
-		}
-
 		function add_favor(){
 			favor.forEach((str,i,arr) => {
 				if(str.includes(',')){
@@ -95,19 +72,14 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 		}
 
 		function find_add_menu(){
-			//~ that.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 			let s = input.text;
 			if(!s) return;
 			that.menu._getMenuItems().forEach((j)=>{if(!j.favor && j.url) j.destroy();});
 			list.forEach(function(str, index, array){
 				if(!str) return;
-				//~ lg("1"+str);
 				if(favor.indexOf(str)>=0) return;
-				//~ lg("2");
 				const [name, url] = str.split(',');
 				if(!name.includes(s)) return;
-				//~ lg("3");
-				//~ lg(str);
 				add_menu(name, url, false);
 			});
 		}
@@ -134,7 +106,6 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 					save_favor();
 					that.menu.moveMenuItem(item, that.menu._getMenuItems().length - 1);
 					item.favor = false;
-					//~ actor.favor = false;
 					item.setIcon(icon_find0);
 				}else{
 					lg("add to favor.");
@@ -142,7 +113,6 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 					save_favor();
 					that.menu.moveMenuItem(item, 1);
 					item.favor = true;
-					//~ actor.favor = true;
 					item.setIcon(icon_favor0);
 				}
 				return Clutter.EVENT_STOP;
