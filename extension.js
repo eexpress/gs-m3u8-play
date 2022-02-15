@@ -113,44 +113,39 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 		}
 
 		function add_menu(name, url, is_favor){
-			const item = new PopupMenu.PopupBaseMenuItem();
-			const icon_find0 = new St.Icon({ icon_name: "view-app-grid-symbolic", icon_size: 24 });
-			const icon_find1 = new St.Icon({ icon_name: "value-increase-symbolic", icon_size: 24 });
-			const icon_favor0 = new St.Icon({ icon_name: "star-new-symbolic", icon_size: 24 });
-			const icon_favor1 = new St.Icon({ icon_name: "value-decrease-symbolic", icon_size: 24 });
-			const butt = new St.Button({ child: (is_favor ? icon_favor0 : icon_find0), track_hover: true });
-			const lbl = new St.Label();
-			lbl.text = "  "+name;
-			const hbox = new St.BoxLayout();
-			hbox.add_child(butt);hbox.add_child(lbl);item.add(hbox);
-
+			const icon_find0 = "view-app-grid-symbolic";
+			const icon_find1 = "value-increase-symbolic";
+			const icon_favor0 = "star-new-symbolic";
+			const icon_favor1 = "value-decrease-symbolic";
+			const item = new PopupMenu.PopupImageMenuItem("  "+name, is_favor ? icon_favor0 : icon_find0);
+			item._icon.set_reactive(true);
 			item.url = url;
 			item.favor = is_favor;
-			butt.favor = is_favor;
-			butt.connect('enter-event', (actor) => {
-				actor.child = actor.favor ? icon_favor1 : icon_find1;
+			item._icon.connect('enter-event', (actor) => {
+				item.setIcon(item.favor ? icon_favor1 : icon_find1);
 			});
-			butt.connect('leave-event', (actor) => {
-				actor.child = actor.favor ? icon_favor0 : icon_find0;
+			item._icon.connect('leave-event', (actor) => {
+				item.setIcon(item.favor ? icon_favor0 : icon_find0);
 			});
-			butt.connect('clicked', (actor) => {
-				if(actor.favor){
+			item._icon.connect('button-release-event', (actor) => {
+				if(item.favor){
 					lg("remove from favor.");
 					delete favor[favor.indexOf(name+","+url)];
 					save_favor();
 					that.menu.moveMenuItem(item, that.menu._getMenuItems().length - 1);
 					item.favor = false;
-					actor.favor = false;
-					actor.child = icon_find0;
+					//~ actor.favor = false;
+					item.setIcon(icon_find0);
 				}else{
 					lg("add to favor.");
 					favor.push(name+","+url);
 					save_favor();
 					that.menu.moveMenuItem(item, 1);
 					item.favor = true;
-					actor.favor = true;
-					actor.child = icon_favor0;
+					//~ actor.favor = true;
+					item.setIcon(icon_favor0);
 				}
+				return Clutter.EVENT_STOP;
 			});
 			item.connect('activate', (actor) => {
 				GLib.spawn_command_line_async('ffplay '+actor.url);
