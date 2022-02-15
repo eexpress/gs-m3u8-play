@@ -67,17 +67,23 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
                 reactive: false, can_focus: false });
 		const input = new St.Entry({
 			name: 'searchEntry',
+			primary_icon: new St.Icon({ icon_name: 'edit-clear-all-symbolic', icon_size: 24 }),
 			secondary_icon: new St.Icon({ icon_name: 'folder-saved-search-symbolic', icon_size: 24 }),
 			can_focus: true,
 			hint_text: _('输入文字，搜索流媒体。'),
 			x_expand: true,
 		});
+		input.connect('primary-icon-clicked', ()=>{ input.text = '';});
 		input.connect('secondary-icon-clicked', ()=>{find_add_menu();});
 		input.clutter_text.connect('activate', (actor) => {find_add_menu();});
 		item_input.add(input);
 		this.menu.addMenuItem(item_input);
 		add_favor();
-		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+		function refresh_menu(){
+			that.menu._getMenuItems().forEach((j)=>{if(!j === item_input) j.destroy();});
+			add_favor();
+		}
 
 		function add_favor(){
 			favor.forEach((str,i,arr) => {
@@ -89,11 +95,13 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 		}
 
 		function find_add_menu(){
+			that.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 			let s = input.text;
 			if(!s) return;
 			that.menu._getMenuItems().forEach((j)=>{if(!j.favor && j.url) j.destroy();});
 			list.forEach(function(str, index, array){
 				if(!str) return;
+				if(favor.indexOf(str)) return;
 				const [name, url] = str.split(',');
 				if(!name.includes(s)) return;
 				add_menu(name, url, false);
@@ -101,14 +109,11 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 		}
 
 		function add_menu(name, url, is_favor){
-			//~ const item = new PopupMenu.PopupImageMenuItem("  "+name, stock_icon.icon_name);
 			const item = new PopupMenu.PopupBaseMenuItem();
 			const icon_find0 = new St.Icon({ icon_name: "view-app-grid-symbolic", icon_size: 24 });
 			const icon_find1 = new St.Icon({ icon_name: "value-increase-symbolic", icon_size: 24 });
 			const icon_favor0 = new St.Icon({ icon_name: "star-new-symbolic", icon_size: 24 });
 			const icon_favor1 = new St.Icon({ icon_name: "value-decrease-symbolic", icon_size: 24 });
-			//~ const icon1 = new St.Icon({ gicon: local_gicon("heart-filled-symbolic.svg"), icon_size: 24 });
-			//~ const icon2 = new St.Icon({ gicon: local_gicon("remove-heart-symbolic.svg"), icon_size: 24 });
 			const butt = new St.Button({ child: (is_favor ? icon_favor0 : icon_find0), track_hover: true });
 			const lbl = new St.Label();
 			lbl.text = "  "+name;
@@ -124,9 +129,18 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 				actor.child = is_favor ? icon_favor0 : icon_find0;
 			});
 			butt.connect('clicked', (actor) => {
-				//move to favorlist, refresh menu
-				favor.push(name+","+url);
-				save_favor();
+				if(is_favor){
+					delete favor[favor.indexOf(name+","+url)];
+					save_favor();
+					that.menu.moveMenuItem(item, that.menu._getMenuItems().length - 1);
+					item.favor = false;
+				}else{
+					favor.push(name+","+url);
+					save_favor();
+					that.menu.moveMenuItem(item, 1);
+					item.favor = true;
+					item.hbox.butt.child = icon_favor0;
+				}
 			});
 			item.connect('activate', (actor) => {
 				GLib.spawn_command_line_async('ffplay '+actor.url);
@@ -140,11 +154,6 @@ https://tx.liveplay.live.kugou.com/live/fx_hifi_1308614369_avc.m3u8
 				if(str.includes(',')){ out += str+'\n'; }
 			});
 			GLib.file_set_contents(favorfile,out);
-		}
-
-		function local_gicon(str){
-			return Gio.icon_new_for_string(
-			ExtensionUtils.getCurrentExtension().path+"/img/"+str);
 		}
 
 	}
