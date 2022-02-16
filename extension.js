@@ -18,9 +18,9 @@ class Indicator extends PanelMenu.Button {
 		this.favorlist = [];	//name,url
 
 		const m3u8path = GLib.get_home_dir()+"/.local/share/m3u8-play/";
-		const favorfile = m3u8path+"favor.list";
-		if(GLib.file_test(favorfile, GLib.FileTest.IS_REGULAR)){
-			const [ok, content] = GLib.file_get_contents(favorfile);
+		this.favorfile = m3u8path+"favor.list";
+		if(GLib.file_test(this.favorfile, GLib.FileTest.IS_REGULAR)){
+			const [ok, content] = GLib.file_get_contents(this.favorfile);
 			if(ok){	this.favorlist = ByteArray.toString(content).split('\n'); }
 		}
 		const tempfile = "/tmp/m3u8.all";
@@ -122,7 +122,7 @@ class Indicator extends PanelMenu.Button {
 			if(item.favor_flag){
 				delete this.favorlist[this.favorlist.indexOf(name+","+url)];
 				this.save_favor();
-				this.menu.moveMenuItem(item, that.menu._getMenuItems().length - 1);
+				this.menu.moveMenuItem(item, this.menu._getMenuItems().length - 1);
 				item.favor_flag = false;
 				item.setIcon(icon_find0);
 			}else{
@@ -145,7 +145,7 @@ class Indicator extends PanelMenu.Button {
 		this.favorlist.forEach((str) => {
 			if(str.includes(',')){ out += str+'\n'; }
 		});
-		GLib.file_set_contents(favorfile,out);
+		GLib.file_set_contents(this.favorfile,out);
 	}
 
 	ls(path){  //return an array of files in path
