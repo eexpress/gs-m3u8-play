@@ -6,8 +6,9 @@ const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Me = ExtensionUtils.getCurrentExtension();
-function lg(s){log("==="+GETTEXT_DOMAIN+"===>"+s)};
+function lg(s){ if (debug) log("==="+GETTEXT_DOMAIN+"===>"+s); }
 const ByteArray = imports.byteArray;
+const debug = false;
 
 let list = [];	//name,url
 let favor = [];	//name,url
@@ -27,7 +28,17 @@ class Indicator extends PanelMenu.Button {
 		let urllist = '';
 		try{
 			if(!GLib.file_test(tempfile, GLib.FileTest.IS_REGULAR)){
-				GLib.spawn_command_line_sync(`cat ${m3u8path}*.m3u* > ${tempfile}`);
+				//~ GLib.spawn_command_line_sync(`cat ${m3u8path}*.m3u* > ${tempfile}`);
+				const f = ls(m3u8path);
+				let output = '';
+				f.forEach((str) => {
+					if(str.includes(".m3u")){
+						lg(str);
+						const [ok, content] = GLib.file_get_contents(m3u8path+str);
+						if(ok) output += ByteArray.toString(content);
+					}
+				});
+				GLib.file_set_contents(tempfile, output);
 			}
 			urllist = ByteArray.toString(GLib.file_get_contents(tempfile)[1]);
 		}catch(e){lg("Read URLs fail.");}
@@ -38,8 +49,6 @@ class Indicator extends PanelMenu.Button {
 
 		const re = /#EXTINF:.*?,(.+?)\r*\n((?:http|https|rtmp):\/\/.+?)\r*\n/mg;
 		list = urllist.replace(re, "$1,$2\n").split('\n');
-		//~ lg("list: "+list);
-		//~ lg("favor: "+favor);
 
 		super._init(0.0, _('M3U8 Play'));
 
@@ -137,6 +146,20 @@ class Indicator extends PanelMenu.Button {
 			});
 			GLib.file_set_contents(favorfile,out);
 		}
+
+		function ls(path){  //return an array of files
+			const dir = Gio.File.new_for_path(path);
+			let fileEnum;
+			let r = [];
+			try{
+				fileEnum = dir.enumerate_children('standard::name', Gio.FileQueryInfoFlags.NONE, null);
+			} catch (e) { fileEnum = null; }
+			if (fileEnum != null) {
+				let info;
+				while (info = fileEnum.next_file(null)) r.push(info.get_name());
+			}
+			return r;
+		};
 
 	}
 });
