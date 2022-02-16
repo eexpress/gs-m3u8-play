@@ -9,6 +9,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const ByteArray = imports.byteArray;
 
 const debug = false;
+//~ const debug = true;
 function lg(s) { if (debug) log("==="+GETTEXT_DOMAIN+"===>"+s); }
 
 const Indicator = GObject.registerClass(
@@ -21,7 +22,12 @@ class Indicator extends PanelMenu.Button {
 		this.favorfile = m3u8path+"favor.list";
 		if(GLib.file_test(this.favorfile, GLib.FileTest.IS_REGULAR)){
 			const [ok, content] = GLib.file_get_contents(this.favorfile);
-			if(ok){	this.favorlist = ByteArray.toString(content).split('\n'); }
+			if(ok){
+				const tl = ByteArray.toString(content).split('\n');
+				for(let i of tl){
+					if(i && i.includes(',')) this.favorlist.push(i);
+				}
+			}
 		}
 		const tempfile = "/tmp/m3u8.all";
 		let urllist = '';
@@ -45,8 +51,10 @@ class Indicator extends PanelMenu.Button {
 			Main.notify(_("居然没有播放列表。"));
 		}
 
-		const re = /#EXTINF:.*?,(.+?)\r*\n((?:http|https|rtmp):\/\/.+?)\r*\n/mg;
+		const re = /#EXTINF:.+?,([^\n\r]+?)\r*\n((?:http|https|rtmp):\/\/.+?)\r*\n/sg;
+		//存在 \r(0d)。文件最后一行没回车，导致匹配失败。失败的，都整体代入了？
 		this.list = urllist.replace(re, "$1,$2\n").split('\n');
+		//~ GLib.file_set_contents('/tmp/tempfile', this.list.join("\n"));
 
 		super._init(0.0, _('M3U8 Play'));
 
@@ -89,14 +97,13 @@ class Indicator extends PanelMenu.Button {
 		this.menu._getMenuItems().forEach((j)=>{if(!j.favor_flag && j.url) j.destroy();});
 		for(let i = 0; i < this.list.length; i ++){
 			let str = this.list[i];
-			if(!str) continue;
+			if(!str || str.indexOf(',')<0 || str.indexOf('#EXT')>=0) continue;
 			if(this.favorlist.indexOf(str)>=0) continue;
-			if(str.indexOf(',')<0) continue;
 			const [name, url] = str.split(',');
 			if(!name.includes(s)) continue;
 			this.add_menu(name, url, false);
 			cnt--;
-			if(cnt<0){
+			if(cnt <= 0){
 				Main.notify(_("搜索列表最多显示 %d 个。爆了。").format(max));
 				return;
 			}
@@ -120,7 +127,8 @@ class Indicator extends PanelMenu.Button {
 		});
 		item._icon.connect('button-release-event', (actor) => {
 			if(item.favor_flag){
-				delete this.favorlist[this.favorlist.indexOf(name+","+url)];
+				//~ delete this.favorlist[this.favorlist.indexOf(name+","+url)];
+				this.favorlist.splice(this.favorlist.indexOf(name+","+url),1);
 				this.save_favor();
 				this.menu.moveMenuItem(item, this.menu._getMenuItems().length - 1);
 				item.favor_flag = false;
