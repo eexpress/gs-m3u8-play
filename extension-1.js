@@ -56,7 +56,7 @@ class Indicator extends PanelMenu.Button {
 
 		const item_input = new PopupMenu.PopupBaseMenuItem({
                 reactive: false, can_focus: false });
-		const input = new St.Entry({
+		this.input = new St.Entry({
 			name: 'searchEntry',
 			primary_icon: new St.Icon({ icon_name: 'edit-clear-all-symbolic', icon_size: 24 }),
 			secondary_icon: new St.Icon({ icon_name: 'folder-saved-search-symbolic', icon_size: 24 }),
@@ -64,10 +64,10 @@ class Indicator extends PanelMenu.Button {
 			hint_text: _('输入文字，搜索流媒体。'),
 			x_expand: true,
 		});
-		input.connect('primary-icon-clicked', ()=>{ input.text = '';});
-		input.connect('secondary-icon-clicked', ()=>{lg("xx");this.find_add_menu(input.text);});
-		input.clutter_text.connect('activate', (actor) => {lg("x");this.find_add_menu(input.text);});
-		item_input.add(input);
+		this.input.connect('primary-icon-clicked', ()=>{ this.input.text = '';});
+		this.input.connect('secondary-icon-clicked', ()=>{this.find_add_menu();});
+		this.input.clutter_text.connect('activate', ()=>{this.find_add_menu();});
+		item_input.add(this.input);
 		this.menu.addMenuItem(item_input);
 		this.add_favor();
 
@@ -82,9 +82,10 @@ class Indicator extends PanelMenu.Button {
 		});
 	}
 
-	find_add_menu(s){
+	find_add_menu(){
+		lg("xxx");
 		let cnt = 20;
-		//~ let s = this.input.text;
+		let s = this.input.text;
 		if(!s) return;
 		this.menu._getMenuItems().forEach((j)=>{if(!j.favor && j.url) j.destroy();});
 		for(let i = 0; i < list.length; i ++){
