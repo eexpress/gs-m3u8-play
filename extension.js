@@ -8,7 +8,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Me = ExtensionUtils.getCurrentExtension();
 const ByteArray = imports.byteArray;
 
-const debug = true;
+const debug = false;
 function lg(s) { if (debug) log("==="+GETTEXT_DOMAIN+"===>"+s); }
 
 const Indicator = GObject.registerClass(
