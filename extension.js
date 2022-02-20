@@ -148,7 +148,7 @@ const Indicator = GObject.registerClass(
 			});
 			item.connect('activate', (actor) => {
 				GLib.spawn_command_line_async(
-					'ffplay -x 1000 -window_title ' + actor.name + " " + actor.url);
+					`ffplay -x 1000 -window_title ${actor.name} ${actor.url}`);
 			});
 			this.menu.addMenuItem(item);
 		}
