@@ -120,6 +120,7 @@ const Indicator = GObject.registerClass(
 			const icon_favor1 = "value-decrease-symbolic";
 			const item = new PopupMenu.PopupImageMenuItem("  " + name, is_favor ? icon_favor0 : icon_find0);
 			item._icon.set_reactive(true);
+			item.name = name;
 			item.url = url;
 			item.favor_flag = is_favor;
 			item._icon.connect('enter-event', (actor) => {
@@ -146,7 +147,8 @@ const Indicator = GObject.registerClass(
 				return Clutter.EVENT_STOP;
 			});
 			item.connect('activate', (actor) => {
-				GLib.spawn_command_line_async('ffplay ' + actor.url);
+				GLib.spawn_command_line_async(
+					'ffplay -x 1000 -window_title ' + actor.name + " " + actor.url);
 			});
 			this.menu.addMenuItem(item);
 		}
