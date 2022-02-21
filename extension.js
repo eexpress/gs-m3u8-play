@@ -24,13 +24,14 @@ const Indicator = GObject.registerClass(
 			const m3u8path = GLib.get_home_dir() + "/.local/share/m3u8-play/";
 			this.favorfile = m3u8path + "favor.list";
 			if (GLib.file_test(this.favorfile, GLib.FileTest.IS_REGULAR)) {
-				this.get_favor(this.favorfile);
-			} else {
-				const favor_default = Me.path + "/favor.list.default";
-				this.get_favor(favor_default);
-				this.save_favor();
+				const [ok, content] = GLib.file_get_contents(this.favorfile);
+				if (ok) {
+					const tl = ByteArray.toString(content).split('\n');
+					for (let i of tl) {
+						if (i && i.includes(',')) this.favorlist.push(i);
+					}
+				}
 			}
-
 			const tempfile = "/tmp/m3u8.all";
 			let urllist = '';
 			try {
@@ -148,20 +149,10 @@ const Indicator = GObject.registerClass(
 			});
 			item.connect('activate', (actor) => {
 				GLib.spawn_command_line_async(
-					`ffplay -x 1000 -window_title ${actor.name} ${actor.url}`);
+					`ffplay -x 1200 -window_title ${actor.name} ${actor.url}`);
 			});
 			this.menu.addMenuItem(item);
 		}
-
-		get_favor(str) {
-			const [ok, content] = GLib.file_get_contents(str);
-			if (ok) {
-				const tl = ByteArray.toString(content).split('\n');
-				for (let i of tl) {
-					if (i && i.includes(',')) this.favorlist.push(i);
-				}
-			}
-		};
 
 		save_favor() {
 			let out = '';
