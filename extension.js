@@ -61,7 +61,7 @@ const Indicator = GObject.registerClass(
 
 			super._init(0.0, _('M3U8 Play'));
 
-			const stock_icon = new St.Icon({ icon_name : 'folder-videos-symbolic', icon_size : 30 });
+			const stock_icon = new St.Icon({ icon_name : 'folder-videos-symbolic', style_class : 'system-status-icon' });
 			this.add_child(stock_icon);
 
 			const item_input = new PopupMenu.PopupBaseMenuItem({
