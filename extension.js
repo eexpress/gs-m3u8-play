@@ -21,7 +21,7 @@ const Indicator = GObject.registerClass(
 			this.list = [];
 			this.favorlist = []; // name,url
 
-			const m3u8path = GLib.get_home_dir() + "/.local/share/m3u8-play/";
+			const m3u8path = GLib.get_home_dir() + "/.local/share/m3u8-play/";		//资源保存目录。
 			this.favorfile = m3u8path + "favor.list";
 			if (GLib.file_test(this.favorfile, GLib.FileTest.IS_REGULAR)) {
 				const [ok, content] = GLib.file_get_contents(this.favorfile);
@@ -32,7 +32,7 @@ const Indicator = GObject.registerClass(
 					}
 				}
 			}
-			const tempfile = "/tmp/m3u8.all";
+			const tempfile = "/tmp/m3u8.all";		//临时文件不存在，才会重建刷新。
 			let urllist = '';
 			try {
 				if (!GLib.file_test(tempfile, GLib.FileTest.IS_REGULAR)) {
@@ -150,6 +150,8 @@ const Indicator = GObject.registerClass(
 			item.connect('activate', (actor) => {
 				GLib.spawn_command_line_async(
 					`ffplay -x 1200 -window_title ${actor.name} ${actor.url}`);
+				lg(url);
+				lg(name);
 			});
 			this.menu.addMenuItem(item);
 		}
